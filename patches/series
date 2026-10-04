@@ -7,3 +7,4 @@
 0006-scratch-buffer-align-keyword-vms.patch
 0007-main-no-askpass-spawn-vms.patch
 0008-stdlib-vms-exit-severity.patch
+0009-url-iconv-notice-vms.patch

@@ -1,0 +1,28 @@
+Subject: url: on OpenVMS, report an unsupported file-name conversion only with -d
+
+convert_fname() converts each file name from the remote encoding (UTF-8)
+to the locale's code set with iconv().  The VSI C RTL's iconv() has only
+the converters installed under SYS$I18N_ICONV, often none, and the C
+locale's code set is "ASCII", so every download printed "Conversion from
+'UTF-8' to 'ASCII' isn't supported".  The name is used unchanged, as
+before; on VMS the message is now debug output.
+
+--- a/src/url.c	2026-10-04 08:07:56.359847064 +0100
++++ b/src/url.c	2026-10-04 08:07:56.393669590 +0100
+@@ -1616,8 +1616,16 @@
+   cd = iconv_open (to_encoding, from_encoding);
+   if (cd == (iconv_t) (-1))
+     {
++#ifdef __VMS
++      /* The C RTL's iconv() has only the converters installed under
++         SYS$I18N_ICONV (often none), and the C locale's code set is
++         "ASCII", so this fails for every download; say so only with -d.  */
++      DEBUGP (("Conversion from %s to %s isn't supported\n",
++               quote_n (0, from_encoding), quote_n (1, to_encoding)));
++#else
+       logprintf (LOG_VERBOSE, _ ("Conversion from %s to %s isn't supported\n"),
+                  quote_n (0, from_encoding), quote_n (1, to_encoding));
++#endif
+       return fname;
+     }
+ 
