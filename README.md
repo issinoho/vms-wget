@@ -31,7 +31,7 @@ node, and MMS builds the result.
 | Builds (VSI C configure answers identical on both) | yes | yes |
 | Smoke test (HTTP, HTTPS with and without the CA bundle, gzip, `-O -`, PCRE2, error status) | 8/8 | 8/8 |
 | Batch job (download; a failure trips `ON ERROR`) | yes | yes (TRADITIONAL parse style) |
-| PCSI kit | `ISSINOHO-I64VMS-WGET-V0125-0E1-1.PCSI` | `ISSINOHO-X86VMS-WGET-V0125-0E1-1.PCSI` |
+| PCSI kit ([v1.25.0-vms1](https://github.com/issinoho/vms-wget/releases/tag/v1.25.0-vms1)) | `ISSINOHO-I64VMS-WGET-V0125-0E1-1.PCSI` | `ISSINOHO-X86VMS-WGET-V0125-0E1-1.PCSI` |
 
 Not in this build: IDN (internationalised domain names), the public suffix list, metalink,
 c-ares, extended attributes and `--use-askpass`.
