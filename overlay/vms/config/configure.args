@@ -1,0 +1,22 @@
+# Options for configure (one per line); both the VSI C run (vms_configure.sh)
+# and the host run in prepare.sh use them.
+# No message catalogues on VMS.
+--disable-nls
+# Single-threaded, as in the sibling ports (no gnulib thread layer).
+--disable-threads
+--disable-dependency-tracking
+# TLS from VSI's SSL3 kit (OpenSSL 3.0), not GnuTLS.
+--with-ssl=openssl
+# zlib (vms-zlib) for compressed transfers and WARC.
+--with-zlib
+# PCRE2 (vms-pcre2) for --regex-type=pcre.
+--enable-pcre2
+--disable-pcre
+# Not available on VMS: IDN (libidn2/libunistring), the public suffix list
+# (libpsl), libuuid, c-ares, metalink, libproxy, extended attributes.
+--disable-iri
+--without-libpsl
+--without-libuuid
+--without-cares
+--without-metalink
+--disable-xattr
