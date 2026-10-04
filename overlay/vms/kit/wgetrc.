@@ -1,0 +1,11 @@
+# WGET$ROOT:[ETC]WGETRC. - system-wide startup file for GNU Wget on OpenVMS
+#
+# Installed by the WGET kit; wget reads it before the user's own startup
+# file (SYS$LOGIN:.WGETRC, or the file the logical name WGETRC names).
+# The kit replaces this file on upgrade: put site settings in a file of
+# your own and point the logical name SYSTEM_WGETRC at it to keep them.
+# The commands are described in WGET$ROOT:[DOC]SAMPLE.WGETRC.
+
+# Verify servers against the CA certificates the kit installs (Mozilla's
+# root store as extracted by the curl project).
+ca_certificate = WGET$ROOT:[SSL]CACERT.PEM

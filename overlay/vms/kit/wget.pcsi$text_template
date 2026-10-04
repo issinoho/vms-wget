@@ -1,0 +1,18 @@
+=product @PRODUCER@ @BASE@ WGET @PCSIVERSION@ full
+1 'PRODUCER
+=prompt @PRODUCER@
+1 'PRODUCT
+=prompt GNU Wget @VERSION@ for OpenVMS
+1 'NOTICE
+=prompt GNU Wget is free software under the GNU General Public License v3 or later.
+1 RELEASE_NOTES
+=prompt Documentation is in [WGET.DOC]README.VMS under the installation directory.
+1 POST_INSTALL
+=prompt Post-installation tasks for GNU Wget
+    At system startup: to define WGET$ROOT at every boot, add this line to
+    SYS$MANAGER:SYSTARTUP_VMS.COM:
+    $ @SYS$STARTUP:WGET$STARTUP.COM
+    For each user: to define the wget command, add this line to LOGIN.COM:
+    $ @WGET$ROOT:[000000]WGET$SETUP.COM
+
+PRODUCT REMOVE WGET removes the product and deassigns WGET$ROOT.

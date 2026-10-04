@@ -1,0 +1,37 @@
+--
+-- PCSI product description for GNU Wget on OpenVMS.
+-- Template: tools/prepare.sh substitutes @PRODUCER@, @BASE@ and @PCSIVERSION@.
+--
+product @PRODUCER@ @BASE@ WGET @PCSIVERSION@ full ;
+
+    -- wget links VSI's OpenSSL 3.0 shared images (SYS$SHARE:SSL3$*_SHR32).
+    software VSI @BASE@ SSL3 ;
+
+    information RELEASE_NOTES phase after ;
+
+    directory [WGET] ;
+    directory [WGET.BIN] ;
+    directory [WGET.DOC] ;
+    directory [WGET.ETC] ;
+    directory [WGET.SSL] ;
+
+    file [WGET.BIN]WGET.EXE ;
+    file [WGET.ETC]WGETRC. ;
+    file [WGET.SSL]CACERT.PEM ;
+    file [SYS$STARTUP]WGET$STARTUP.COM ;
+    file [WGET]WGET$SETUP.COM ;
+    file [WGET.DOC]README.VMS ;
+    file [WGET.DOC]COPYING. ;
+    file [WGET.DOC]NEWS. ;
+    file [WGET.DOC]WGET.TXT ;
+    file [WGET.DOC]SAMPLE.WGETRC ;
+
+    -- Define WGET$ROOT now and print the post-installation tasks (PCSI shows
+    -- only the title of an information message unless /HELP is given).
+    execute postinstall "@PCSI$DESTINATION:[SYS$STARTUP]WGET$STARTUP.COM INSTALL" interactive ;
+    -- On removal, deassign WGET$ROOT.
+    execute install "CONTINUE" remove "@PCSI$DESTINATION:[SYS$STARTUP]WGET$STARTUP.COM REMOVE" ;
+
+    information POST_INSTALL phase after ;
+
+end product ;

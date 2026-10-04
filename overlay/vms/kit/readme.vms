@@ -1,0 +1,76 @@
+GNU Wget for OpenVMS
+====================
+
+This is GNU Wget @VERSION@ built natively for OpenVMS @ARCH@, from the
+unmodified GNU release plus the patches in the vms-wget project:
+
+    https://github.com/issinoho/vms-wget
+
+Kit version: @KITVERSION@.  Wget is free software under the GNU General
+Public License, version 3 or later; see COPYING.  The manual is WGET.TXT;
+the startup-file commands are described in SAMPLE.WGETRC.
+
+What is installed
+-----------------
+    WGET$ROOT:[BIN]WGET.EXE          wget
+    WGET$ROOT:[ETC]WGETRC.           the system-wide startup file
+    WGET$ROOT:[SSL]CACERT.PEM        CA certificates for HTTPS
+    WGET$ROOT:[000000]WGET$SETUP.COM defines the wget command
+    WGET$ROOT:[DOC]                  this file, COPYING, NEWS, WGET.TXT,
+                                     SAMPLE.WGETRC
+    SYS$STARTUP:WGET$STARTUP.COM     defines WGET$ROOT
+
+TLS uses VSI's OpenSSL 3.0 kit (SSL3), a prerequisite of this kit; zlib
+(--compression=gzip) and PCRE2 (--regex-type=pcre) are linked in.  This
+build has no IDN (internationalised domain names), public-suffix list,
+metalink or --use-askpass support.
+
+Setting up
+----------
+The kit installs WGET$STARTUP.COM into SYS$STARTUP and runs it once.  To
+define WGET$ROOT at every boot, the system manager adds this line to
+SYS$MANAGER:SYSTARTUP_VMS.COM:
+
+    $ @SYS$STARTUP:WGET$STARTUP.COM
+
+Each user (or SYLOGIN.COM, for everyone) then defines the command:
+
+    $ @WGET$ROOT:[000000]WGET$SETUP.COM
+
+Startup files and CA certificates
+---------------------------------
+wget reads WGET$ROOT:[ETC]WGETRC. first, then the user's own file:
+SYS$LOGIN:.WGETRC, or the file the logical name WGETRC names.  The system
+file sets
+
+    ca_certificate = WGET$ROOT:[SSL]CACERT.PEM
+
+so HTTPS servers are verified against Mozilla's root certificates as
+extracted by the curl project (https://curl.se/docs/caextract.html), dated
+@CABUNDLEDATE@.  The kit replaces WGETRC. on upgrade; to keep site settings,
+put them in a file of your own and define the logical name SYSTEM_WGETRC
+to point at it.  --ca-certificate=file overrides the bundle for one run.
+
+Upper-case options and batch jobs
+---------------------------------
+Under the TRADITIONAL DCL parse style DCL upper-cases the unquoted parts of
+a command and the C run-time library passes them to wget in lower case, so
+an unquoted -O arrives as -o (log file) and -N as -n.  Batch jobs use
+TRADITIONAL even when interactive logins are set to EXTENDED.  Quote the
+options that use capital letters, or start the procedure with
+
+    $ SET PROCESS/PARSE_STYLE=EXTENDED
+
+Exit status
+-----------
+Under DCL a failed run exits with an error-severity status, so ON ERROR and
+IF .NOT. $STATUS work; wget's exit code N (4 network failure, 5 certificate
+not verified, 8 server error response, ...) is ($STATUS .AND. %X7F8) / 8.
+Under a GNV shell, $? is the exit code as on Unix.
+
+Files
+-----
+Downloads are written as Stream_LF files.  An existing file is not
+overwritten or renamed file.1: wget writes a new version of it.  On ODS-2
+disks, names from URLs are changed to valid ODS-2 names; on ODS-5 they are
+kept.
