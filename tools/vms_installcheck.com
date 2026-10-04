@@ -36,7 +36,9 @@ $ wget -q https://example.com/
 $ wget -q https://example.com/
 $ directory/nohead/notrail/size
 $ v2 = f$search("INDEX.HTML;2") .nes. ""
-$ dot1 = f$search("INDEX.HTML.1") .nes. "" .or. f$search("INDEX^.HTML.1") .nes. ""
+$! (A Unix-style index.html.1 would be INDEX^.HTML.1 on ODS-5; plain
+$! "INDEX.HTML.1" would mean version 1 of INDEX.HTML.)
+$ dot1 = f$search("INDEX^.HTML.1;*") .nes. ""
 $ if v2 .and. .not. dot1 then write sys$output "WGET_NEW_VERSION: PASS"
 $ if .not. v2 .or. dot1 then write sys$output "WGET_NEW_VERSION: FAIL"
 $ rfm = f$file_attributes("INDEX.HTML", "RFM")
@@ -50,9 +52,10 @@ $ delete/nolog WGETIC.DIR;
 $! A failed run has error severity under DCL
 $ define/user sys$error nla0:
 $ wget -q -O nla0: http://nonexistent.invalid/
+$! Capture $STATUS once: any DCL assignment resets $STATUS and $SEVERITY.
 $ st = $status
-$ sev = $severity
-$ write sys$output "failed run status ", st
+$ sev = st .and. 7
+$ write sys$output "failed run status ", st, " severity ", sev
 $ if sev .eq. 2 .or. sev .eq. 4 then write sys$output "WGET_ERROR_SEVERITY: PASS"
 $ if sev .ne. 2 .and. sev .ne. 4 then write sys$output "WGET_ERROR_SEVERITY: FAIL"
 $ delete/symbol/global wget
