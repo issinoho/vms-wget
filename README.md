@@ -29,9 +29,9 @@ node, and MMS builds the result.
 | | IA64 (OpenVMS V8.4-2L3, VSI C 7.4) | x86-64 (OpenVMS E9.2-4, VSI C 7.7) |
 |---|---|---|
 | Builds (VSI C configure answers identical on both) | yes | yes |
-| Smoke test (HTTP, HTTPS with and without the CA bundle, gzip, `-O -`, PCRE2, error status) | 8/8 | 8/8 |
+| Smoke test (HTTP, HTTPS with and without the CA bundle, gzip, `-O -`, PCRE2, error status, download over an older fixed-record version) | 9/9 | 9/9 |
 | Batch job (download; a failure trips `ON ERROR`) | yes | yes (TRADITIONAL parse style) |
-| PCSI kit ([v1.25.0-vms1](https://github.com/issinoho/vms-wget/releases/tag/v1.25.0-vms1)) | `ISSINOHO-I64VMS-WGET-V0125-0E1-1.PCSI` | `ISSINOHO-X86VMS-WGET-V0125-0E1-1.PCSI` |
+| PCSI kit ([v1.25.0-vms2](https://github.com/issinoho/vms-wget/releases/tag/v1.25.0-vms2)) | `ISSINOHO-I64VMS-WGET-V0125-0E2-1.PCSI` | `ISSINOHO-X86VMS-WGET-V0125-0E2-1.PCSI` |
 
 Not in this build: IDN (internationalised domain names), the public suffix list, metalink,
 c-ares, extended attributes and `--use-askpass`.
@@ -44,7 +44,7 @@ against the release's `SHA256SUMS`. A kit downloaded through a non-VMS system lo
 record format, so restore that first, then install it:
 
 ```
-$ SET FILE/ATTRIBUTE=(RFM:FIX,LRL:8192,MRS:8192,RAT:NONE) ISSINOHO-*-WGET-V0125-0E1-1.PCSI
+$ SET FILE/ATTRIBUTE=(RFM:FIX,LRL:8192,MRS:8192,RAT:NONE) ISSINOHO-*-WGET-V0125-0E2-1.PCSI
 $ PRODUCT INSTALL WGET /PRODUCER=ISSINOHO /SOURCE=dev:[dir]
 $ @WGET$ROOT:[000000]WGET$SETUP.COM
 ```
@@ -55,7 +55,7 @@ bundle `[WGET.SSL]CACERT.PEM`, `WGET$SETUP.COM` (defines the `wget` command; add
 and `SYS$STARTUP:WGET$STARTUP.COM`, which defines `WGET$ROOT` (add
 `$ @SYS$STARTUP:WGET$STARTUP.COM` to `SYS$MANAGER:SYSTARTUP_VMS.COM` to define it at every
 boot). `PRODUCT REMOVE WGET` removes it and deassigns `WGET$ROOT`. The kit's version
-`V1.25-0E1` is Wget 1.25.0 with our patch level as the ECO.
+`V1.25-0E2` is Wget 1.25.0 with our patch level as the ECO.
 
 ## Using wget on VMS
 
@@ -72,8 +72,8 @@ boot). `PRODUCT REMOVE WGET` removes it and deassigns `WGET$ROOT`. The kit's ver
   8 server error response, ...) is `($STATUS .AND. %X7F8) / 8`. Under a GNV shell, `$?` is
   the exit code as on Unix. (The C run-time library's POSIX exit gives every code success
   severity; patch 0008 fixes that.)
-- **Files.** Downloads are Stream_LF. Fetching a file that exists writes a new version
-  (`;2`), not `name.1`. On ODS-5 disks names from URLs are kept (`example^.com`); on ODS-2
+- **Files.** Downloads are Stream_LF, byte for byte, whatever format an older version of
+  the file had. Fetching a file that exists writes a new version (`;2`), not `name.1`. On ODS-5 disks names from URLs are kept (`example^.com`); on ODS-2
   they are made valid ODS-2 names.
 
 ## Patches
@@ -89,6 +89,8 @@ boot). `PRODUCT REMOVE WGET` removes it and deassigns `WGET$ROOT`. The kit's ver
 | 0007 | `src/main.c`: no `posix_spawn` (no `fork()` on VMS) for `--use-askpass`, which Wget already leaves out on VMS. |
 | 0008 | `lib/stdlib.in.h`: route `exit()` through `vms_exit()`, so a failed run has error severity under DCL and the POSIX status under a GNV shell. |
 | 0009 | `src/url.c`: on VMS, report an unsupported file-name encoding conversion only with `-d` (the C RTL has no `iconv` converters unless the internationalisation kit is installed). |
+| 0010 | `src/init.c`: join a Unix-style `$HOME` with a slash, so the user's `.wgetrc` and the HSTS database `.wget-hsts` are in the login directory, not one level up. |
+| 0011 | `src/http.c`, `main.c`, `ftp.c`, `utils.c`: give every file wget writes its attributes explicitly (Stream_LF, no maximum record size). When the file already exists, the C RTL otherwise gives the new version the old one's: a download over a file with fixed 8192-byte records was padded to whole records or failed with `RMS-F-MRS`. |
 
 Wget's sources keep VMS code from an earlier port whose support files are no longer
 distributed; `vms/vms.c` and `vms/vms.h` supply that interface (RMS access callback, ODS-2
@@ -115,7 +117,7 @@ tools/vms_configure.sh ia64 # only for a new Wget release: VSI C configure run, 
 ## Roadmap
 
 1. Wget's own test suite under GNV, as for grep and sed.
-2. Patches 0001, 0002, 0004 and 0007-0009 offered to Wget and gnulib.
+2. Patches 0001, 0002, 0004 and 0007-0011 offered to Wget and gnulib.
 3. A port to OpenVMS **Alpha**.
 
 ## Artwork

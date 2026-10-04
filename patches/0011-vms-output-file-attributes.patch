@@ -1,0 +1,97 @@
+Subject: src: on OpenVMS, give downloaded files their attributes explicitly
+
+When the output file already exists, wget creates a new version, and the
+VSI C RTL gives it the old version's record attributes unless the open()
+or fopen() call names them.  http.c (the usual path for a download) and
+main.c (-O) passed no attributes, utils.c and ftp.c only some, so fetching
+a file over one with fixed 8192-byte records wrote fixed records: binary
+data was padded to a multiple of 8192 bytes, or the write failed with
+RMS-F-MRS ("invalid maximum record size").  Name Stream_LF, no maximum
+record size and carriage-return carriage control for every file wget
+writes as a byte stream; binary FTP transfers keep their explicit fixed
+512-byte records.
+
+--- a/src/ftp.c	2026-10-04 09:50:00.156424431 +0100
++++ b/src/ftp.c	2026-10-04 09:50:00.318385287 +0100
+@@ -1443,6 +1443,9 @@
+    ((!(cmd & DO_LIST)) && BIN_TYPE_TRANSFER && (opt.ftp_stmlf == 0))
+ # define FOPEN_OPT_ARGS "fop=sqo", "acc", acc_cb, &open_id
+ # define FOPEN_OPT_ARGS_BIN "ctx=bin,stm", "rfm=fix", "mrs=512" FOPEN_OPT_ARGS
++/* Text files: Stream_LF with no maximum record size, whatever an older
++   version of the file had (see http.c).  */
++# define FOPEN_OPT_ARGS_TXT "rfm=stmlf", "mrs=0", "rat=cr", FOPEN_OPT_ARGS
+ #else /* def __VMS */
+ # define BIN_TYPE_FILE true
+ #endif /* def __VMS [else] */
+@@ -1460,7 +1463,7 @@
+           else
+             {
+               open_id = 4;
+-              fp = fopen (con->target, "a", FOPEN_OPT_ARGS);
++              fp = fopen (con->target, "a", FOPEN_OPT_ARGS_TXT);
+             }
+ #else /* def __VMS */
+           fp = fopen (con->target, "ab");
+@@ -1494,7 +1497,7 @@
+           else
+             {
+               open_id = 6;
+-              fp = fopen (con->target, "w", FOPEN_OPT_ARGS);
++              fp = fopen (con->target, "w", FOPEN_OPT_ARGS_TXT);
+             }
+ #else /* def __VMS */
+           fp = fopen (con->target, "wb");
+--- a/src/http.c	2026-10-04 09:50:00.136557213 +0100
++++ b/src/http.c	2026-10-04 09:50:00.311446129 +0100
+@@ -2530,9 +2530,14 @@
+ {
+ /* 2005-06-17 SMS.
+    For VMS, define common fopen() optional arguments.
++   Give the file its attributes explicitly (Stream_LF, no maximum record
++   size): when the file already exists, the C RTL otherwise gives the new
++   version the old one's, and a download over a file with fixed 8192-byte
++   records was padded to whole records or failed with RMS-F-MRS.
+ */
+ #ifdef __VMS
+-# define FOPEN_OPT_ARGS "fop=sqo", "acc", acc_cb, &open_id
++# define FOPEN_OPT_ARGS "rfm=stmlf", "mrs=0", "rat=cr", \
++                       "fop=sqo", "acc", acc_cb, &open_id
+ # define FOPEN_BIN_FLAG 3
+ #else /* def __VMS */
+ # define FOPEN_BIN_FLAG true
+--- a/src/main.c	2026-10-04 09:50:00.146432546 +0100
++++ b/src/main.c	2026-10-04 09:50:00.313446156 +0100
+@@ -1992,7 +1992,10 @@
+ /* Common fopen() optional arguments:
+    sequential access only, access callback function.
+ */
+-# define FOPEN_OPT_ARGS , "fop=sqo", "acc", acc_cb, &open_id
++/* Stream_LF with no maximum record size, whatever an older version of the
++   file had (see http.c).  */
++# define FOPEN_OPT_ARGS , "rfm=stmlf", "mrs=0", "rat=cr", \
++                        "fop=sqo", "acc", acc_cb, &open_id
+           int open_id = 7;
+ #else /* def __VMS */
+ # define FOPEN_OPT_ARGS
+--- a/src/utils.c	2026-10-04 09:50:00.169806674 +0100
++++ b/src/utils.c	2026-10-04 09:50:00.319446235 +0100
+@@ -791,7 +791,8 @@
+        flags,                           /* Flags. */
+        0777,                            /* Mode for default protection. */
+        "ctx=bin,stm",                   /* Binary, stream access. */
+-       "rfm=stmlf",                     /* Stream_LF. */
++       "rfm=stmlf",                     /* Stream_LF, */
++       "mrs=0",                         /* no maximum record size. */
+        OPEN_OPT_ARGS);                  /* Access callback. */
+     }
+   else if (binary)
+@@ -811,7 +812,8 @@
+       fd = open( fname,                 /* File name. */
+        flags,                           /* Flags. */
+        0777,                            /* Mode for default protection. */
+-       "rfm=stmlf",                     /* Stream_LF. */
++       "rfm=stmlf",                     /* Stream_LF, */
++       "mrs=0",                         /* no maximum record size. */
+        OPEN_OPT_ARGS);                  /* Access callback. */
+     }
+ # else /* def __VMS */

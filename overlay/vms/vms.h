@@ -25,7 +25,10 @@
 
 /* RMS access callback for open()/fopen() ("acc", acc_cb, &id): sets
    read-ahead/write-behind and multi-buffering for sequential transfers.
-   *id_arg identifies the call site (wget numbers them).  */
+   *id_arg identifies the call site (wget numbers them).  The record format
+   of a new file is set by the open() arguments themselves (patch 0011):
+   by the time the callback runs, the C RTL has set itself up for the
+   format it took from an existing older version.  */
 int acc_cb (int *id_arg, struct FAB *fab, struct RAB *rab);
 
 /* Record whether file names will be created on an ODS-5 volume: the

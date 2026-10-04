@@ -1,0 +1,30 @@
+Subject: init: on OpenVMS, join a Unix-style $HOME with a slash
+
+ajoin_dir_file() appends a file name to a directory with no separator on
+VMS ("dev:[dir]" + ".wgetrc").  When the C RTL reports file names in Unix
+style (DECC$FILENAME_UNIX_REPORT, which this port enables), $HOME is
+"/dev/dir", so the user's startup file and the HSTS database became
+"/dev/dir.wgetrc" and "/dev/dir.wget-hsts", one directory too high.  Use a
+slash after a Unix-style directory.
+
+--- a/src/init.c	2026-10-04 09:41:34.216658732 +0100
++++ b/src/init.c	2026-10-04 09:41:34.342759438 +0100
+@@ -596,8 +596,16 @@
+ {
+   char *dir_file;
+ #ifdef __VMS
+-   /* No separator: "dev:[dir]" + "name.type" */
+-  dir_file = aprintf ("%s%s", dir, file);
++  /* No separator: "dev:[dir]" + "name.type".  But $HOME can also be a
++     Unix-style path ("/dev/dir": the C RTL reports it so when the feature
++     DECC$FILENAME_UNIX_REPORT is enabled), which needs the slash; without
++     it ~/.wgetrc and ~/.wget-hsts became "dir.wgetrc" one level up.  */
++  size_t dir_len = strlen (dir);
++  if (dir_len > 0 && dir[dir_len - 1] != ']' && dir[dir_len - 1] != '>'
++      && dir[dir_len - 1] != ':')
++    dir_file = aprintf ("%s/%s", dir, file);
++  else
++    dir_file = aprintf ("%s%s", dir, file);
+ #else /* def __VMS */
+   /* Slash separator: "/a/b" + "/" + "name.type" */
+   dir_file = aprintf ("%s/%s", dir, file);

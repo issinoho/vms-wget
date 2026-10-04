@@ -8,3 +8,5 @@
 0007-main-no-askpass-spawn-vms.patch
 0008-stdlib-vms-exit-severity.patch
 0009-url-iconv-notice-vms.patch
+0010-init-unix-home-join-vms.patch
+0011-vms-output-file-attributes.patch

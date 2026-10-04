@@ -100,6 +100,28 @@ $ sev = $severity
 $ name = "unresolvable host gives an error status"
 $ gosub check_failure
 $!
+$! 9. a download over an older version with fixed 8192-byte records (as a
+$!    kit gets after SET FILE/ATTRIBUTE=RFM:FIX) makes a byte-exact Stream_LF
+$!    new version, not fixed records (patch 0011)
+$ if f$search("[.SMOKE]PAGE9.DIR") .eqs. "" then create/directory [.SMOKE.PAGE9]
+$ set default [.SMOKE.PAGE9]
+$ wget -q https://example.com/
+$ size1 = (f$file_attributes("INDEX.HTML", "EOF") - 1) * 512 + f$file_attributes("INDEX.HTML", "FFB")
+$ set file/attribute=(RFM:FIX,LRL:8192,MRS:8192,RAT:CR) INDEX.HTML;1
+$ wget -q https://example.com/
+$ st = $status
+$ rfm2 = f$file_attributes("INDEX.HTML;2", "RFM")
+$ size2 = (f$file_attributes("INDEX.HTML;2", "EOF") - 1) * 512 + f$file_attributes("INDEX.HTML;2", "FFB")
+$ set default [--]
+$ write sys$output "   sizes ''size1' and ''size2', new version ''rfm2'"
+$ sev = 2
+$ if st .and. rfm2 .eqs. "STMLF" .and. size1 .eq. size2 .and. size1 .gt. 0 then sev = 1
+$ name = "download over a fixed-record older version"
+$ gosub check_success
+$ delete/nolog [.SMOKE.PAGE9]*.*;*
+$ set file/protection=o:rwed [.SMOKE]PAGE9.DIR
+$ delete/nolog [.SMOKE]PAGE9.DIR;
+$!
 $ write sys$output "SMOKE: ''pass' passed, ''fail' failed"
 $ deassign/process WGET$ROOT
 $ delete/nolog [.SMOKE.SSL]*.*;*, [.SMOKE.ETC]*.*;*, [.SMOKE]*.TXT;*, [.SMOKE]*.HTML;*
