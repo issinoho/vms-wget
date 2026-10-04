@@ -1,0 +1,9 @@
+# Ordered list of patches applied to the upstream tree (one per line).
+0001-config-h-assert-guard-vms.patch
+0002-vms-code-paths-current.patch
+0003-lib-gl-h-names-vms.patch
+0004-configure-sched-param-openvms.patch
+0005-getprogname-vms.patch
+0006-scratch-buffer-align-keyword-vms.patch
+0007-main-no-askpass-spawn-vms.patch
+0008-stdlib-vms-exit-severity.patch

@@ -1,0 +1,29 @@
+Subject: stdlib.h: on OpenVMS, route exit() through vms_exit()
+
+With _POSIX_EXIT, the VSI C RTL encodes exit(n) as %X35A000 + n*8 + 1,
+which has success severity: a wget run that failed (exit code 4, network
+failure; 5, certificate not verified) left $SEVERITY at 1, and DCL's ON
+ERROR never fired.  At the end of gnulib's <stdlib.h> wrapper, redefine
+exit() to call vms_exit() (vms/vms.c), which gives an error-severity status
+when wget runs under DCL and the POSIX status under a GNV shell.
+
+--- a/lib/stdlib.in.h	2026-10-04 07:55:30.106978823 +0100
++++ b/lib/stdlib.in.h	2026-10-04 07:55:30.137859450 +0100
+@@ -1983,6 +1983,17 @@
+ #endif
+ 
+ 
++#if defined __VMS && defined _POSIX_EXIT
++/* OpenVMS: the C RTL's POSIX exit() (selected by _POSIX_EXIT, which the GNV
++   shells need for $?) turns every exit code into a status of *success*
++   severity, so to DCL a failed run looks like a successful one.  vms_exit()
++   (the program supplies it) keeps the POSIX status under a Unix shell and
++   gives an error-severity status under DCL.  The C RTL's <stdlib.h> has
++   defined exit() as __posix_exit() by now; take it over.  */
++# undef exit
++# define exit(status) vms_exit (status)
++extern void vms_exit (int status);
++#endif
+ _GL_INLINE_HEADER_END
+ 
+ #endif /* _@GUARD_PREFIX@_STDLIB_H */

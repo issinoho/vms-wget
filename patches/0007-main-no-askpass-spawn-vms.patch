@@ -1,0 +1,43 @@
+Subject: main: on OpenVMS, do without posix_spawn for --use-askpass
+
+run_use_askpass() starts the askpass program with posix_spawnp(), which
+OpenVMS lacks; gnulib's replacement needs fork(), so it does not compile
+there either.  init.c already leaves the "useaskpass" command out on VMS,
+so the option is rejected and the function is never called; compile it as
+a stub there, and skip <spawn.h>.
+
+--- a/src/main.c	2026-10-04 07:49:02.167096140 +0100
++++ b/src/main.c	2026-10-04 07:49:02.200110487 +0100
+@@ -34,7 +34,9 @@
+ #include <unistd.h>
+ #include <string.h>
+ #include <signal.h>
+-#include <spawn.h>
++#ifndef __VMS
++# include <spawn.h>
++#endif
+ #if defined(ENABLE_NLS) || defined(WINDOWS)
+ # include <locale.h>
+ #endif
+@@ -1095,6 +1097,13 @@
+ static void
+ run_use_askpass (char *question, char **answer)
+ {
++#ifdef __VMS
++  /* OpenVMS has no posix_spawn (no fork), and init.c leaves "useaskpass"
++     out of the commands on VMS, so opt.use_askpass is never set.  */
++  (void) question;
++  (void) answer;
++  abort ();
++#else /* def __VMS */
+   char tmp[1024];
+   pid_t pid;
+   int status;
+@@ -1159,6 +1168,7 @@
+     bytes = p - tmp;
+ 
+   *answer = xmemdup0 (tmp, bytes);
++#endif /* def __VMS [else] */
+ }
+ 
+ /* set the user name and password*/

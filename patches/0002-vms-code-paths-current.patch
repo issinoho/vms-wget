@@ -1,0 +1,35 @@
+Subject: src: bring the OpenVMS code paths up to date
+
+The __VMS branch of utils.c still defined unique_name_passthrough() with
+the two arguments it had before utils.h changed it to one, so utils.c did
+not compile on VMS.  (On VMS, UNIQ_SEP is undefined on purpose: a file that
+exists gets a new version instead of a .1, .2 suffix.)
+
+warc.c's __VMS branch passes an RMS option ("fop=tmd", delete on close) to
+fopen(), as ftp.c and utils.c do; include vms.h there too, which gives
+those files the C RTL's variadic fopen() rather than gnulib's two-argument
+replacement.
+
+--- a/src/utils.c	2026-10-04 07:44:00.912413453 +0100
++++ b/src/utils.c	2026-10-04 07:44:00.934421275 +0100
+@@ -708,7 +708,7 @@
+    possible.
+ */
+ char *
+-unique_name_passthrough (const char *file, bool allow_passthrough)
++unique_name_passthrough (const char *file)
+ {
+   /* Return the FILE itself, without modification, irregardful. */
+   return (char *) file;
+--- a/src/warc.c	2026-10-04 07:44:00.915903879 +0100
++++ b/src/warc.c	2026-10-04 07:44:14.015797342 +0100
+@@ -43,6 +43,9 @@
+ #include <sha1.h>
+ #include <base32.h>
+ #include <unistd.h>
++#ifdef __VMS
++# include "vms.h"
++#endif /* def __VMS */
+ #ifdef HAVE_LIBZ
+ #include <zlib.h>
+ #endif
