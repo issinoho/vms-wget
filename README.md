@@ -7,6 +7,7 @@
 [![Release](https://img.shields.io/github/v/release/issinoho/vms-wget?label=release)](https://github.com/issinoho/vms-wget/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/issinoho/vms-wget/total?label=downloads)](https://github.com/issinoho/vms-wget/releases)
 ![OpenVMS](https://img.shields.io/badge/OpenVMS-IA64%20%7C%20x86--64-blue)
+[![License](https://img.shields.io/github/license/issinoho/vms-wget)](COPYING)
 
 [GNU Wget](https://www.gnu.org/software/wget/) (**1.25.0**) built natively for OpenVMS on **IA64**
 and **x86-64**, following Wget's own releases. It belongs to the same family as
