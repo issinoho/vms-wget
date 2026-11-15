@@ -1,7 +1,7 @@
-! DESCRIP.MMS - build GNU Wget for OpenVMS (IA64, x86-64)
+! DESCRIP.MMS - build GNU Wget for OpenVMS (IA64, x86-64, Alpha)
 !
 ! Run from the top of the prepared source tree via [.VMS]BUILD.COM, which
-! passes ARCH (IA64 or X86_64), creates the output directories and defines
+! passes ARCH (IA64, X86_64 or ALPHA), creates the output directories and defines
 ! the logical names for the libraries:
 !   ZLIB$ROOT   zlib install tree (github.com/issinoho/vms-zlib)
 !   PCRE2$ROOT  PCRE2 install tree (github.com/issinoho/vms-pcre2)

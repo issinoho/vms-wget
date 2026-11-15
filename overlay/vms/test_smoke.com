@@ -22,12 +22,19 @@ $ if f$search("[.SMOKE]ETC.DIR") .eqs. "" then create/directory [.SMOKE.ETC]
 $ if f$search("[.SMOKE]SSL.DIR") .eqs. "" then create/directory [.SMOKE.SSL]
 $ if f$search("[.SMOKE]EMPTY.DIR") .eqs. "" then create/directory [.SMOKE.EMPTY]
 $ copy/nolog [.VMS]CACERT.PEM [.SMOKE.SSL]
+$ create [.SMOKE.EMPTY]EMPTY.PEM
 $ create [.SMOKE.ETC]WGETRC.
 ca_certificate = WGET$ROOT:[SSL]CACERT.PEM
 $ smoke = f$parse("[.SMOKE]",,,"DEVICE","NO_CONCEAL") + -
           (f$parse("[.SMOKE]",,,"DIRECTORY","NO_CONCEAL") - "][" - "]") + ".]"
 $ empty = f$parse("[.SMOKE.EMPTY]",,,"DEVICE","NO_CONCEAL") + -
           (f$parse("[.SMOKE.EMPTY]",,,"DIRECTORY","NO_CONCEAL") - "][" - "]") + ".]"
+$! wget always also loads OpenSSL's default trust store, and a node may have one
+$! (VSI's SSL3 kit on the Alpha test node ships SSL3$ROOT:[DEMOCA.CERTS]CERT.PEM).
+$! Tests 3 and 4 point OpenSSL's SSL_CERT_DIR and SSL_CERT_FILE at an empty
+$! directory and file, so that only the CA bundle named in WGETRC counts.
+$ efile = f$parse("[.SMOKE.EMPTY]EMPTY.PEM",,,,"SYNTAX_ONLY") - f$parse("[.SMOKE.EMPTY]EMPTY.PEM",,,"VERSION")
+$ edir = f$parse("[.SMOKE.EMPTY]",,,"DEVICE") + f$parse("[.SMOKE.EMPTY]",,,"DIRECTORY")
 $ out = "[.SMOKE]OUT.TXT"
 $ page = "[.SMOKE]PAGE.HTML"
 $ set process/parse_style=extended
@@ -53,7 +60,10 @@ $ endif
 $ name = "HTTP download to a file"
 $ gosub check_success
 $!
-$! 3. HTTPS verified with the CA bundle named in the system wgetrc
+$! 3. HTTPS verified with the CA bundle named in the system wgetrc (and nothing
+$!    else: the default trust store is masked)
+$ define/user SSL_CERT_DIR 'edir'
+$ define/user SSL_CERT_FILE 'efile'
 $ wget -q -O nla0: https://example.com/
 $ sev = $severity
 $ name = "HTTPS with the CA bundle from WGET$ROOT:[ETC]WGETRC."
@@ -62,6 +72,8 @@ $!
 $! 4. ... and refused without it
 $ define/process/translation_attributes=concealed WGET$ROOT 'empty'
 $ define/user sys$error nla0:
+$ define/user SSL_CERT_DIR 'edir'
+$ define/user SSL_CERT_FILE 'efile'
 $ wget -q -O nla0: https://example.com/
 $ sev = $severity
 $ name = "HTTPS refused without a CA bundle"
@@ -122,9 +134,22 @@ $ delete/nolog [.SMOKE.PAGE9]*.*;*
 $ set file/protection=o:rwed [.SMOKE]PAGE9.DIR
 $ delete/nolog [.SMOKE]PAGE9.DIR;
 $!
+$! 10. a server whose certificate does not verify is rejected even with the CA
+$!     bundle: an expired certificate (badssl.com) must end with wget's exit
+$!     code 5 (certificate verification failure), not a network error (4)
+$ define/user sys$error nla0:
+$ wget -q -O nla0: https://expired.badssl.com/
+$ st = $status
+$ code = (st .and. %X7F8) / 8
+$ write sys$output "   wget exit code ''code'"
+$ sev = 2
+$ if code .eq. 5 then sev = 1
+$ name = "expired certificate rejected with the CA bundle (exit code 5)"
+$ gosub check_success
+$!
 $ write sys$output "SMOKE: ''pass' passed, ''fail' failed"
 $ deassign/process WGET$ROOT
-$ delete/nolog [.SMOKE.SSL]*.*;*, [.SMOKE.ETC]*.*;*, [.SMOKE]*.TXT;*, [.SMOKE]*.HTML;*
+$ delete/nolog [.SMOKE.SSL]*.*;*, [.SMOKE.ETC]*.*;*, [.SMOKE]*.TXT;*, [.SMOKE]*.HTML;*, [.SMOKE.EMPTY]*.*;*
 $ set file/protection=o:rwed [.SMOKE]SSL.DIR, ETC.DIR, EMPTY.DIR
 $ delete/nolog [.SMOKE]SSL.DIR;, ETC.DIR;, EMPTY.DIR;
 $ set file/protection=o:rwed SMOKE.DIR

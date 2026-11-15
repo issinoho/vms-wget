@@ -6,11 +6,11 @@
 
 [![Release](https://img.shields.io/github/v/release/issinoho/vms-wget?label=release)](https://github.com/issinoho/vms-wget/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/issinoho/vms-wget/total?label=downloads)](https://github.com/issinoho/vms-wget/releases)
-![OpenVMS](https://img.shields.io/badge/OpenVMS-IA64%20%7C%20x86--64-blue)
+![OpenVMS](https://img.shields.io/badge/OpenVMS-IA64%20%7C%20x86--64%20%7C%20Alpha-blue)
 [![License](https://img.shields.io/github/license/issinoho/vms-wget)](COPYING)
 
-[GNU Wget](https://www.gnu.org/software/wget/) (**1.25.0**) built natively for OpenVMS on **IA64**
-and **x86-64**, following Wget's own releases. It belongs to the same family as
+[GNU Wget](https://www.gnu.org/software/wget/) (**1.25.0**) built natively for OpenVMS on **IA64**,
+**x86-64** and **Alpha**, following Wget's own releases. It belongs to the same family as
 [GNU grep](https://github.com/issinoho/vms-grep), [GNU sed](https://github.com/issinoho/vms-sed),
 [GNU awk](https://github.com/issinoho/vms-awk), [GNU make](https://github.com/issinoho/vms-make),
 [GNU diffutils](https://github.com/issinoho/vms-diffutils),
@@ -42,6 +42,15 @@ node, and MMS builds the result.
 | Smoke test (HTTP, HTTPS with and without the CA bundle, gzip, `-O -`, PCRE2, error status, download over an older fixed-record version) | 9/9 | 9/9 |
 | Batch job (download; a failure trips `ON ERROR`) | yes | yes (TRADITIONAL parse style) |
 | PCSI kit ([v1.25.0-vms2](https://github.com/issinoho/vms-wget/releases/tag/v1.25.0-vms2)) | `ISSINOHO-I64VMS-WGET-V0125-0E2-1.PCSI` | `ISSINOHO-X86VMS-WGET-V0125-0E2-1.PCSI` |
+
+**Alpha (v1.25.0-vms3, a dedicated Alpha release; IA64 and x86-64 stay on vms2):** built on
+OpenVMS Alpha V8.4-2L2 with VSI C V7.4-002, VSI SSL3 (OpenSSL 3.0) and the static zlib and PCRE2
+of the sister ports. The Alpha shares the IA64-derived `config.h`, checked by a compile-and-link
+probe on the node (see `overlay/vms/config/vms-manual.site`). Smoke test 10/10 (the HTTPS check
+uses the kit's CA bundle alone, with the node's own trust store masked, and an expired
+certificate is rejected with exit code 5; these two checks are new in vms3 and have not been run on
+IA64 or x86-64); kit
+`ISSINOHO-AXPVMS-WGET-V0125-0E3-1.PCSI`. Batch jobs only on that node.
 
 Not in this build: IDN (internationalised domain names), the public suffix list, metalink,
 c-ares, extended attributes and `--use-askpass`.
@@ -109,7 +118,8 @@ name conversion, `vms_basename()`, the `--version` supplement and `vms_exit()`).
 
 ## How to build
 
-The build needs VSI's SSL3 kit and the [vms-zlib](https://github.com/issinoho/vms-zlib) and
+The build runs on IA64, x86-64 or Alpha (tested on Alpha V8.4-2L2 with VSI C V7.4-002; there
+the tools use batch jobs, as no interactive ssh output is reliable). It needs VSI's SSL3 kit and the [vms-zlib](https://github.com/issinoho/vms-zlib) and
 [vms-pcre2](https://github.com/issinoho/vms-pcre2) install trees in the same work directory
 (`ZLIB_TREE`, `PCRE2_TREE` in `upstream.conf`). Set up `tools/nodes.conf` as described in
 [vms-grep's README](https://github.com/issinoho/vms-grep#2b-build-on-vms-from-the-host-over-ssh).
@@ -118,7 +128,7 @@ The build needs VSI's SSL3 kit and the [vms-zlib](https://github.com/issinoho/vm
 git clone https://github.com/issinoho/vms-wget.git
 cd vms-wget
 tools/prepare.sh            # fetch + verify, patch, configure with the VSI C answers, MMS lists
-tools/build.sh ia64         # upload, then @[.VMS]BUILD on the node (MMS)
+tools/build.sh ia64         # (or x86, alpha) upload, then @[.VMS]BUILD on the node (MMS)
 tools/test.sh ia64          # smoke test (needs network access to example.com)
 tools/kit.sh ia64           # PCSI kit -> out/kits/
 tools/vms_configure.sh ia64 # only for a new Wget release: VSI C configure run, ~1 hour
@@ -128,7 +138,7 @@ tools/vms_configure.sh ia64 # only for a new Wget release: VSI C configure run, 
 
 1. Wget's own test suite under GNV, as for grep and sed.
 2. Patches 0001, 0002, 0004 and 0007-0011 offered to Wget and gnulib.
-3. A port to OpenVMS **Alpha**.
+3. ~~A port to OpenVMS **Alpha**.~~ Done: see Status (Alpha kit, patch level 3).
 
 The family of ports, all for IA64 and x86-64 (MariaDB: x86-64 only), each following its upstream releases:
 

@@ -1,4 +1,4 @@
-# Hand-settled configure answers for OpenVMS (VSI C, both IA64 and x86-64).
+# Hand-settled configure answers for OpenVMS (VSI C; IA64, x86-64 and Alpha).
 #
 # Loaded after the VSI C configure answers, so values here win.  Use this for checks the
 # VSI C configure run cannot answer: run-time behaviour tests (AC_RUN_IFELSE),
@@ -10,7 +10,7 @@
 ac_cv_func_pthread_sigmask=no
 
 # configure reads byte order out of an object file in cross mode, which
-# vmscc does not return.  IA64 (as used by VMS) and x86-64 are little-endian.
+# vmscc does not return.  IA64 (as used by VMS), x86-64 and Alpha are little-endian.
 ac_cv_c_bigendian=no
 
 # The CRTL's <string.h> provides mempcpy as a function-like macro (no linkable
@@ -24,3 +24,33 @@ gl_cv_onwards_func_mempcpy=yes
 # configure ask for host "openvms").  The VSI C configure run predates that
 # patch and never asked, so record the answer here.
 ac_cv_type_struct_sched_param=yes
+
+# OpenVMS Alpha (V8.4-2L2, VSI C V7.4-002): the staged config.h, generated from the IA64
+# answers (configure-ia64.cache), is shared by all three architectures.  No full configure
+# was run on the Alpha (a cross configure there takes about two hours and, for vms-grep,
+# reproduced the IA64 cache apart from the CPU ABI lines, which this config.h does not use).
+# Instead a probe was compiled (and, for functions, linked) on the node with the real
+# compiler qualifiers and defines (CC_QUAL/CC_DEFS in sources.mms), using the same test
+# programs as configure and the same include text, against the 296 compile-time answers
+# in the cache:
+#   - 57 ac_cv_header_*: #include each header.  35 "yes" present, 22 "no" absent.
+#   - 136 ac_cv_func_*: configure's link test for each function.  77 "yes" link and 58 "no"
+#     do not; the 136th is mempcpy, below.
+#   - 64 ac_cv_have_decl_*: 37 "yes" declared, 27 "no" undeclared.  Where configure asks
+#     with more than one include text (strerror_r, getdelim, getline, iswblank,
+#     sig_atomic_t, inet_ntop, __fsetlocking), every variant was probed: all agree.
+#   - 23 ac_cv_type_* (21 yes, 2 no) and 16 ac_cv_member_* (6 yes, 10 no).
+# That is 295 of 296 identical.  The one difference is mempcpy: it does not link on the
+# Alpha because the CRTL defines it as a macro, exactly as on IA64, where configure said
+# "no" before the override above (ac_cv_func_mempcpy=yes), which settles it for all three.  struct sched_param is
+# found in <pthread.h> only, as the override above says.
+# A short run-time probe covered the answers a native run would settle (the cross run
+# guesses them): long, pointers, size_t, ptrdiff_t, time_t and wchar_t are 32 bits, off_t 64;
+# size_t, wchar_t and time_t unsigned, sig_atomic_t signed (as cached); little-endian;
+# malloc(0) and realloc(NULL,0) non-NULL, realloc(p,0) NULL; open() of a directory fails
+# with ENOENT (the override above); stat() of "file/" fails; mktime() of 1970-01-01 gives
+# -1.  Where the Alpha is better than the cache's guess (snprintf returns the C99 length
+# and truncates correctly, getcwd(NULL,0) works, the C locale's mbrtowc accepts a high
+# byte), the cache says "guessing no" and gnulib then uses its own replacement, which is
+# also what the IA64 and x86-64 builds use; the replacements work on every architecture.
+# Same conclusion as for grep and sed: one config.h for IA64, x86-64 and Alpha.

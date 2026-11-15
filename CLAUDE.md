@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guidance for working in this repository: a port of GNU Wget to OpenVMS (IA64 and x86-64)
+Guidance for working in this repository: a port of GNU Wget to OpenVMS (IA64, x86-64 and Alpha)
 that stores only our deltas over the upstream release tarball. It is built with exactly the
 methods of its sibling `~/projects/vms-grep` (github.com/issinoho/vms-grep), and the tools
 are copies of grep's, extended for wget's libraries. Read README.md first; it describes the workflow and design. This
@@ -49,11 +49,30 @@ file covers the rules and the pitfalls.
   `fetch.sh` accepts gpg's VALIDSIG for the pinned primary key.
 - **Not built:** IDN/IRI, libpsl, libuuid, c-ares, metalink, xattr (`configure.args`).
 
+## Alpha
+
+- `build.sh`/`test.sh`/`kit.sh`/`installcheck.sh` use `vms.sh batch` there (interactive ssh
+  output is unreliable; a batch job starts in the login directory, so each job sets default
+  to the work directory). `vms.sh` is vms-grep's (it retries a command that never started).
+- DCL: compare architecture names with `.EQS.`, never `.EQ.` (integer compare: every name
+  equals every other). `build.com` upper-cases `F$GETSYI("ARCH_NAME")` and accepts ALPHA.
+- The AXPVMS kit has its own README (`README_AXPVMS.VMS`). Patch level 3 is the Alpha kit;
+  the x86-64 and IA64 kits stay on 2.
+- Libraries on the node: VSI SSL3, `ZLIB-1_3_2.INSTALL_ALPHA` and `PCRE2-10_49.INSTALL_ALPHA`
+  under the work directory (build.sh defines `ZLIB$ROOT` and `PCRE2$ROOT` from the node's
+  architecture name).
+- Alpha has no GNV and no Perl: smoke test only (the upstream suite needs GNV). The
+  `/FLOAT=IEEE_FLOAT/IEEE_MODE=DENORM_RESULTS` qualifiers in `ccflags.txt` apply to all three.
+- Configuration: the Alpha uses the shared IA64-derived `config.h`, justified by a compile
+  and link probe run on the node; see the Alpha note in `overlay/vms/config/vms-manual.site`.
+- The wget VMS code (`vms.c`, patch 0005) uses `LIB$GETSYI`/`LIB$GETJPI` with longword item
+  codes and descriptors, never item lists, and 32-bit pointers: nothing 64-bit dependent.
+
 ## Commands
 
 ```sh
 tools/prepare.sh                        # always first after changing patches/overlay
-tools/build.sh <ia64|x86> [ALL|CLEAN] [KEEP_GOING]
+tools/build.sh <ia64|x86|alpha> [ALL|CLEAN] [KEEP_GOING]
 tools/test.sh <node>                    # smoke test
 tools/gnvtest.sh x86 [tests...]         # upstream suite (x86 only; ~90 min for all)
 tools/vms.sh <node> dcl '<cmd>' ...     # run DCL; also run/batch/put/get
