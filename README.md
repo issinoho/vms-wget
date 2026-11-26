@@ -36,21 +36,19 @@ node, and MMS builds the result.
 
 ## Status
 
-| | IA64 (OpenVMS V8.4-2L3, VSI C 7.4) | x86-64 (OpenVMS E9.2-4, VSI C 7.7) |
-|---|---|---|
-| Builds (VSI C configure answers identical on both) | yes | yes |
-| Smoke test (HTTP, HTTPS with and without the CA bundle, gzip, `-O -`, PCRE2, error status, download over an older fixed-record version) | 9/9 | 9/9 |
-| Batch job (download; a failure trips `ON ERROR`) | yes | yes (TRADITIONAL parse style) |
-| PCSI kit ([v1.25.0-vms2](https://github.com/issinoho/vms-wget/releases/tag/v1.25.0-vms2)) | `ISSINOHO-I64VMS-WGET-V0125-0E2-1.PCSI` | `ISSINOHO-X86VMS-WGET-V0125-0E2-1.PCSI` |
+**Released: [v1.25.0-vms4](https://github.com/issinoho/vms-wget/releases/tag/v1.25.0-vms4)** for
+x86-64 and Alpha: the same wget source, rebuilt with zlib 1.4 and Mozilla's root store as of
+5 November 2026. IA64 stays on [v1.25.0-vms2](https://github.com/issinoho/vms-wget/releases/tag/v1.25.0-vms2)
+for now (its build node is unavailable).
 
-**Alpha (v1.25.0-vms3, a dedicated Alpha release; IA64 and x86-64 stay on vms2):** built on
-OpenVMS Alpha V8.4-2L2 with VSI C V7.4-002, VSI SSL3 (OpenSSL 3.0) and the static zlib and PCRE2
-of the sister ports. The Alpha shares the IA64-derived `config.h`, checked by a compile-and-link
-probe on the node (see `overlay/vms/config/vms-manual.site`). Smoke test 10/10 (the HTTPS check
-uses the kit's CA bundle alone, with the node's own trust store masked, and an expired
-certificate is rejected with exit code 5; these two checks are new in vms3 and have not been run on
-IA64 or x86-64); kit
-`ISSINOHO-AXPVMS-WGET-V0125-0E3-1.PCSI`. Batch jobs only on that node.
+| | IA64 (OpenVMS V8.4-2L3, VSI C 7.4) | x86-64 (OpenVMS E9.2-4, VSI C 7.7) | Alpha (OpenVMS V8.4-2L2, VSI C 7.4) |
+|---|---|---|---|
+| Newest kit | vms2 (zlib 1.3.2) | **vms4** (zlib 1.4) | **vms4** (zlib 1.4) |
+| Builds (one shared, IA64-derived `config.h`; checked by a probe on the Alpha, see `overlay/vms/config/vms-manual.site`) | yes | yes | yes |
+| Smoke test (HTTP, HTTPS with the kit's CA bundle alone and without one, an expired certificate rejected, gzip, `-O -`, PCRE2, error status, download over an older fixed-record version) | 9/9 (vms2) | 10/10 | 10/10 |
+| Kit install (version, HTTPS with the kit's bundle, Stream_LF output, error severity), remove | clean (vms2) | clean | clean |
+| Batch job (download; a failure trips `ON ERROR`) | yes | yes (TRADITIONAL parse style) | batch only |
+| PCSI kit | [v1.25.0-vms2](https://github.com/issinoho/vms-wget/releases/tag/v1.25.0-vms2): `ISSINOHO-I64VMS-WGET-V0125-0E2-1.PCSI` | [v1.25.0-vms4](https://github.com/issinoho/vms-wget/releases/tag/v1.25.0-vms4): `ISSINOHO-X86VMS-WGET-V0125-0E4-1.PCSI` | [v1.25.0-vms4](https://github.com/issinoho/vms-wget/releases/tag/v1.25.0-vms4): `ISSINOHO-AXPVMS-WGET-V0125-0E4-1.PCSI` |
 
 Not in this build: IDN (internationalised domain names), the public suffix list, metalink,
 c-ares, extended attributes and `--use-askpass`.
@@ -63,7 +61,7 @@ against the release's `SHA256SUMS`. A kit downloaded through a non-VMS system lo
 record format, so restore that first, then install it:
 
 ```
-$ SET FILE/ATTRIBUTE=(RFM:FIX,LRL:8192,MRS:8192,RAT:NONE) ISSINOHO-*-WGET-V0125-0E2-1.PCSI
+$ SET FILE/ATTRIBUTE=(RFM:FIX,LRL:8192,MRS:8192,RAT:NONE) ISSINOHO-*-WGET-V0125-0E4-1.PCSI
 $ PRODUCT INSTALL WGET /PRODUCER=ISSINOHO /SOURCE=dev:[dir]
 $ @WGET$ROOT:[000000]WGET$SETUP.COM
 ```
@@ -74,7 +72,7 @@ bundle `[WGET.SSL]CACERT.PEM`, `WGET$SETUP.COM` (defines the `wget` command; add
 and `SYS$STARTUP:WGET$STARTUP.COM`, which defines `WGET$ROOT` (add
 `$ @SYS$STARTUP:WGET$STARTUP.COM` to `SYS$MANAGER:SYSTARTUP_VMS.COM` to define it at every
 boot). `PRODUCT REMOVE WGET` removes it and deassigns `WGET$ROOT`. The kit's version
-`V1.25-0E2` is Wget 1.25.0 with our patch level as the ECO.
+`V1.25-0E4` is Wget 1.25.0 with our patch level as the ECO.
 
 ## Using wget on VMS
 
