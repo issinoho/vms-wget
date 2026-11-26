@@ -56,9 +56,9 @@ file covers the rules and the pitfalls.
   to the work directory). `vms.sh` is vms-grep's (it retries a command that never started).
 - DCL: compare architecture names with `.EQS.`, never `.EQ.` (integer compare: every name
   equals every other). `build.com` upper-cases `F$GETSYI("ARCH_NAME")` and accepts ALPHA.
-- The AXPVMS kit has its own README (`README_AXPVMS.VMS`). Patch level 3 is the Alpha kit;
-  the x86-64 and IA64 kits stay on 2.
-- Libraries on the node: VSI SSL3, `ZLIB-1_3_2.INSTALL_ALPHA` and `PCRE2-10_49.INSTALL_ALPHA`
+- The AXPVMS kit has its own README (`README_AXPVMS.VMS`). Since 1.25.0-vms4 all
+  architectures share one patch level.
+- Libraries on the node: VSI SSL3, `<ZLIB_TREE>.INSTALL_ALPHA` and `<PCRE2_TREE>.INSTALL_ALPHA`
   under the work directory (build.sh defines `ZLIB$ROOT` and `PCRE2$ROOT` from the node's
   architecture name).
 - Alpha has no GNV and no Perl: smoke test only (the upstream suite needs GNV). The

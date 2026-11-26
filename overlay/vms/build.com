@@ -26,7 +26,7 @@ $ if f$search("[.OBJ_''arch']LIB.DIR") .eqs. "" then create/directory [.OBJ_'arc
 $ if f$search("BIN_''arch'.DIR") .eqs. "" then create/directory [.BIN_'arch']
 $! Libraries: ZLIB$ROOT and PCRE2$ROOT must be rooted logicals for the
 $! vms-zlib and vms-pcre2 install trees, e.g.
-$!   $ DEFINE/TRANSLATION=CONCEALED ZLIB$ROOT dev:[dir.ZLIB-1_3_2.INSTALL_IA64.]
+$!   $ DEFINE/TRANSLATION=CONCEALED ZLIB$ROOT dev:[dir.ZLIB-1_4.INSTALL_IA64.]
 $! and VSI's SSL3 kit (OpenSSL 3.0) must be installed.
 $ if p1 .nes. "CLEAN"
 $ then
